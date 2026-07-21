@@ -5,6 +5,7 @@
         <x-partials.navbar />
         <!-- Page content here -->
         <div class="p-4">
+            <x-flash-message />
             {{ $slot }}
         </div>
     </div>
@@ -15,6 +16,32 @@
         <div class="flex flex-col min-h-full bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
             <!-- Main Menu -->
             <ul class="w-full menu grow pt-2">
+                <li>
+                    <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'menu-active' : '' }}">
+                        <span class="is-drawer-close:hidden">Dashboard</span>
+                        <span class="is-drawer-open:hidden">D</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('tickets.index') }}" class="{{ request()->routeIs('tickets.index', 'tickets.show') ? 'menu-active' : '' }}">
+                        <span class="is-drawer-close:hidden">My Tickets</span>
+                        <span class="is-drawer-open:hidden">T</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('tickets.create') }}" class="{{ request()->routeIs('tickets.create') ? 'menu-active' : '' }}">
+                        <span class="is-drawer-close:hidden">Create Ticket</span>
+                        <span class="is-drawer-open:hidden">+</span>
+                    </a>
+                </li>
+                @if (auth()->user()->isAdmin())
+                    <li>
+                        <a href="{{ route('admin.tickets.index') }}" class="{{ request()->routeIs('admin.tickets.*') ? 'menu-active' : '' }}">
+                            <span class="is-drawer-close:hidden">All Tickets</span>
+                            <span class="is-drawer-open:hidden">A</span>
+                        </a>
+                    </li>
+                @endif
                 {{-- <li>
                     <button class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Homepage">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round"

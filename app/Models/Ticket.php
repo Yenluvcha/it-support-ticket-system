@@ -10,8 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Normal users will create and read only their own tickets. Editing, deletion,
- * and status transitions will be introduced through authorized CRUD actions.
+ * Normal users can create and read only their own tickets. Editing and deletion
+ * are not available; authorized admins can advance the ticket lifecycle.
  */
 #[Fillable(['subject', 'description', 'status'])]
 class Ticket extends Model
