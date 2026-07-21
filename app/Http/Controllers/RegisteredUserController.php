@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class RegisteredUserController extends Controller
@@ -19,10 +20,11 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'default:user|in:user,admin'
         ]);
 
-        $user = User::create($validated);
+        $user = new User($validated);
+        $user->forceFill(['role' => UserRole::User]);
+        $user->save();
 
         Auth::login($user);
 

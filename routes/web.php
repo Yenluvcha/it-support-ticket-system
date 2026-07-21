@@ -19,4 +19,8 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
+
+    Route::get('/admin', fn () => response()->noContent())
+        ->middleware('admin')
+        ->name('admin.placeholder');
 });
