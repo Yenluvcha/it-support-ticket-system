@@ -34,6 +34,15 @@
                         <span class="is-drawer-open:hidden">+</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('notifications.index') }}" class="{{ request()->routeIs('notifications.*') ? 'menu-active' : '' }}">
+                        <span class="is-drawer-close:hidden">Notifications</span>
+                        <span class="is-drawer-open:hidden">N</span>
+                        @if (auth()->user()->unreadNotifications()->count())
+                            <span class="badge badge-primary badge-sm is-drawer-close:hidden">{{ auth()->user()->unreadNotifications()->count() }}</span>
+                        @endif
+                    </a>
+                </li>
                 @if (auth()->user()->isAdmin())
                     <li>
                         <a href="{{ route('admin.tickets.index') }}" class="{{ request()->routeIs('admin.tickets.*') ? 'menu-active' : '' }}">

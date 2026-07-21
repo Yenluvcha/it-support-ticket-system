@@ -3,15 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Enums\TicketStatus;
+use App\Enums\UserRole;
 use App\Http\Requests\AdvanceTicketStatusRequest;
 use App\Http\Requests\StoreTicketRequest;
 use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
+use App\Models\User;
+use App\Notifications\TicketCreatedNotification;
+use App\Notifications\TicketStatusAdvancedNotification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class TicketController extends Controller
@@ -42,12 +48,27 @@ class TicketController extends Controller
     {
         $this->authorize('create', Ticket::class);
 
-        $ticket = new Ticket([
-            ...$request->validated(),
-            'status' => TicketStatus::Open,
-        ]);
-        $ticket->user()->associate($request->user());
-        $ticket->save();
+        $ticket = DB::transaction(function () use ($request): Ticket {
+            $ticket = new Ticket([
+                ...$request->validated(),
+                'status' => TicketStatus::Open,
+            ]);
+            $ticket->user()->associate($request->user());
+            $ticket->save();
+
+            $admins = User::query()
+                ->where('role', UserRole::Admin)
+                ->whereKeyNot($request->user()->id)
+                ->get();
+
+            Notification::send($admins, new TicketCreatedNotification(
+                $ticket->id,
+                $ticket->subject,
+                $request->user()->name,
+            ));
+
+            return $ticket;
+        });
 
         if ($request->expectsJson()) {
             return (new TicketResource($ticket))
@@ -104,7 +125,22 @@ class TicketController extends Controller
             ]);
         }
 
-        $ticket->update(['status' => $nextStatus]);
+        $previousStatus = $ticket->status;
+
+        DB::transaction(function () use ($ticket, $nextStatus, $previousStatus, $request): void {
+            $ticket->update(['status' => $nextStatus]);
+
+            $owner = $ticket->user;
+
+            if ($owner->isNot($request->user())) {
+                $owner->notify(new TicketStatusAdvancedNotification(
+                    $ticket->id,
+                    $ticket->subject,
+                    $previousStatus,
+                    $nextStatus,
+                ));
+            }
+        });
 
         $ticket->refresh();
 
