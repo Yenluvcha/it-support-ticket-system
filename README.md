@@ -1,58 +1,127 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# IT Support Ticket System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel application for submitting and managing internal IT support tickets. It has separate user and administrator workflows, role-based access control, and queued in-app notifications.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Public registration for normal users; administrator accounts are provisioned securely through a seeder.
+- Users can create tickets and view only their own ticket history.
+- Administrators can view every ticket and progress its status through:
+  `Open -> In Progress -> Resolved -> Closed`.
+- Responsive DaisyUI dashboard with ticket summaries, ticket lists, and ticket detail pages.
+- Queued database notifications:
+  - New tickets notify all administrators except the ticket creator.
+  - Status changes notify the ticket owner unless they made the change.
+  - Users can view and mark notifications as read.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3 or newer
+- Composer
+- Node.js and npm
+- SQLite, MySQL, MariaDB, PostgreSQL, or SQL Server
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. Install PHP dependencies and frontend dependencies:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+   ```bash
+   composer install
+   npm install
+   ```
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+2. Create your environment file and application key:
 
-## Agentic Development
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+   On Windows PowerShell, use:
+
+   ```powershell
+   Copy-Item .env.example .env
+   php artisan key:generate
+   ```
+
+3. Configure the database and initial administrator in `.env`:
+
+   ```dotenv
+   DB_CONNECTION=sqlite
+   QUEUE_CONNECTION=database
+
+   ADMIN_NAME="Support Administrator"
+   ADMIN_EMAIL=admin@example.com
+   ADMIN_PASSWORD=change-this-password
+   ```
+
+4. Run migrations and provision the administrator:
+
+   ```bash
+   php artisan migrate
+   php artisan db:seed --class=AdminUserSeeder
+   ```
+
+5. Build frontend assets and start the application:
+
+   ```bash
+   npm run build
+   php artisan serve
+   ```
+
+## Queue Worker
+
+Ticket notifications are queued in the database. Run a worker alongside the application:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+php artisan queue:work
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+For local development, the Composer `dev` script starts the Laravel server, queue listener, and Vite development server together:
 
-## Contributing
+```bash
+composer dev
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Roles
 
-## Code of Conduct
+### User
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Create tickets.
+- View their own tickets and status updates.
+- View and manage their own notifications.
 
-## Security Vulnerabilities
+### Administrator
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- View all tickets.
+- Advance ticket statuses one step at a time.
+- Receive notifications for new tickets created by other users.
 
-## License
+Public registration always creates a `user`; never submit `role=admin` through registration. Use `AdminUserSeeder` to create or update an administrator.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Testing
+
+Run the feature and unit test suite with:
+
+```bash
+php artisan test
+```
+
+Run the formatter check with:
+
+```bash
+vendor/bin/pint --test
+```
+
+## Useful Commands
+
+```bash
+# Show registered routes
+php artisan route:list
+
+# Retry failed queue jobs
+php artisan queue:retry all
+
+# Inspect failed queue jobs
+php artisan queue:failed
+```
